@@ -44,12 +44,15 @@ var intervalsText = []string{
 	"One hour",
 }
 
+var timestamp time.Time
+
 func main() {
 
 	//parse the timestamp string
 	timestampStr := flag.String("timestamp", "", "")
 	flag.Parse()
-	timestamp, err := time.Parse(time.RFC822, *timestampStr)
+	var err error
+	timestamp, err = time.Parse(time.RFC822, *timestampStr)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(0)
@@ -78,6 +81,9 @@ func main() {
 		fmt.Println("error creating Discord session,", err)
 		return
 	}
+
+	// Register the messageCreate func as a callback for MessageCreate events.
+	dg.AddHandler(messageCreate)
 
 	// In this example, we only care about receiving message events.
 	dg.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildMessages)
@@ -163,4 +169,90 @@ func setupViper() {
 			fmt.Printf("Fatal error config file: %s \n", err)
 		}
 	}
+}
+
+// This function will be called (due to AddHandler above) every time a new
+// message is created on any channel that the authenticated bot has access to.
+func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
+
+	// Ignore all messages created by the bot itself
+	// This isn't required in this specific example but it's a good practice.
+	if m.Author.ID == s.State.User.ID {
+		return
+	}
+
+	//see if the message mentioned this bot
+	mentionedBot := false
+	for _, u := range m.Mentions {
+		if u.ID == s.State.User.ID {
+			mentionedBot = true
+		}
+	}
+
+	if !mentionedBot {
+		return
+	}
+
+	_, err := s.ChannelMessageSend(m.ChannelID, getTimeRemainingAsText(timestamp))
+	if err != nil {
+		fmt.Printf("unable to send message to channel %v: %v", m.ChannelID, err)
+	}
+
+}
+
+type countdown struct {
+	t int
+	d int
+	h int
+	m int
+	s int
+}
+
+func getTimeRemaining(t time.Time) countdown {
+	currentTime := time.Now()
+	difference := t.Sub(currentTime)
+
+	total := int(difference.Seconds())
+	days := int(total / (60 * 60 * 24))
+	hours := int(total / (60 * 60) % 24)
+	minutes := int(total/60) % 60
+	seconds := int(total % 60)
+
+	return countdown{
+		t: total,
+		d: days,
+		h: hours,
+		m: minutes,
+		s: seconds,
+	}
+}
+
+func getTimeRemainingAsText(t time.Time) string {
+	c := getTimeRemaining(t)
+	if c.t < 0 {
+		return "The deadline has passed!"
+	}
+
+	daysStr := ""
+	hoursStr := ""
+	minsStr := ""
+	secsStr := ""
+
+	if c.d > 0 {
+		daysStr = fmt.Sprintf("%v days, ", c.d)
+	}
+
+	if c.h > 0 {
+		hoursStr = fmt.Sprintf("%v hours, ", c.h)
+	}
+
+	if c.m > 0 {
+		minsStr = fmt.Sprintf("%v minutes, and ", c.m)
+	}
+
+	if c.s > 0 {
+		secsStr = fmt.Sprintf("%v seconds ", c.s)
+	}
+
+	return fmt.Sprintf("%s%s%s%sremaining until the deadline!", daysStr, hoursStr, minsStr, secsStr)
 }
