@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 	"time"
 
@@ -103,7 +102,7 @@ func main() {
 
 	intervalsText = intervalsText[len(intervalsText)-maxIntervals:]
 
-	channelID := viper.GetInt(channelIDStr)
+	channelID := viper.GetString(channelIDStr)
 
 	for true {
 		select {
@@ -118,9 +117,9 @@ func main() {
 		case _, ok := <-timerChan:
 			if ok {
 				fmt.Println("Time elapsed!")
-				_, err = dg.ChannelMessageSend(strconv.Itoa(channelID), fmt.Sprintf("%s remaining until the submission deadline!", intervalsText[currentInterval]))
+				_, err = dg.ChannelMessageSend(channelID, fmt.Sprintf("%s remaining until the submission deadline!", intervalsText[currentInterval]))
 				if err != nil {
-					fmt.Printf("unable to send message: %v", err)
+					fmt.Printf("unable to send message to channel %v: %v", channelID, err)
 				}
 				currentInterval++
 
