@@ -142,6 +142,9 @@ func main() {
 		default:
 			//fmt.Println("No value ready, moving on.")
 		}
+
+		//sleep for a few seconds to save cycles
+		time.Sleep(5 * time.Second)
 	}
 }
 
