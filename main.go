@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -181,6 +182,17 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Ignore all messages created by the bot itself
 	// This isn't required in this specific example but it's a good practice.
 	if m.Author.ID == s.State.User.ID {
+		return
+	}
+
+	//see if the message contains the words "thanks" and "deadline"
+	msgLower := strings.ToLower(m.Message.Content)
+	if strings.Contains(msgLower, "thanks") && strings.Contains(msgLower, "deadline") {
+		responseMsg := fmt.Sprintf("You're welcome, %s.", m.Author.Username)
+		_, err := s.ChannelMessageSend(m.ChannelID, responseMsg)
+		if err != nil {
+			fmt.Printf("unable to send message to channel %v: %v", m.ChannelID, err)
+		}
 		return
 	}
 
