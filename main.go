@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/katamarijr/internationalcolortime"
 	"github.com/spf13/viper"
 )
 
@@ -30,6 +31,7 @@ var intervals = []time.Duration{
 	Day,
 	time.Hour * 6,
 	time.Hour * 1,
+	time.Minute * 5,
 }
 
 // text values that will be echoed when the interval passes, mirrors the values in intervals
@@ -43,9 +45,11 @@ var intervalsText = []string{
 	"One day",
 	"Six hours",
 	"One hour",
+	"Five minutes",
 }
 
 var timestamp time.Time
+var deadlineString string
 
 func main() {
 
@@ -58,6 +62,10 @@ func main() {
 		fmt.Println(err)
 		os.Exit(0)
 	}
+
+	deadlineString = internationalcolortime.TimeToICT(timestamp).Format("PNK:04, or 03:04 PM MST")
+
+	fmt.Println(internationalcolortime.TimeToICT(timestamp))
 
 	setupViper()
 
@@ -124,7 +132,8 @@ func main() {
 		case _, ok := <-timerChan:
 			if ok {
 				fmt.Println("Time elapsed!")
-				_, err = dg.ChannelMessageSend(channelID, fmt.Sprintf("%s remaining until the submission deadline!", intervalsText[currentInterval]))
+				_, err = dg.ChannelMessageSend(channelID, fmt.Sprintf("%s remaining until the submission deadline! Deadline is at %s.",
+					intervalsText[currentInterval], deadlineString))
 				if err != nil {
 					fmt.Printf("unable to send message to channel %v: %v", channelID, err)
 				}
@@ -185,9 +194,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	//see if the message contains the words "thanks" and "deadline"
+	//see if the message contains the words "thank" and "deadline"
 	msgLower := strings.ToLower(m.Message.Content)
-	if strings.Contains(msgLower, "thanks") && strings.Contains(msgLower, "deadline") {
+	if strings.Contains(msgLower, "thank") && strings.Contains(msgLower, "deadline") {
 		responseMsg := fmt.Sprintf("You're welcome, %s.", m.Author.Username)
 		_, err := s.ChannelMessageSend(m.ChannelID, responseMsg)
 		if err != nil {
@@ -269,5 +278,5 @@ func getTimeRemainingAsText(t time.Time) string {
 		secsStr = fmt.Sprintf("%v seconds ", c.s)
 	}
 
-	return fmt.Sprintf("%s%s%s%sremaining until the deadline!", daysStr, hoursStr, minsStr, secsStr)
+	return fmt.Sprintf("%s%s%s%sremaining until the deadline! Deadline is at %s", daysStr, hoursStr, minsStr, secsStr, deadlineString)
 }
