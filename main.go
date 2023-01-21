@@ -63,7 +63,9 @@ func main() {
 		os.Exit(0)
 	}
 
-	deadlineString = internationalcolortime.TimeToICT(timestamp).Format("PNK:04, or 03:04 PM MST")
+	//todo color library is miscalculating the minutes portion on format
+	//deadlineString = internationalcolortime.TimeToICT(timestamp).Format("PNK:04, or 03:04 PM MST")
+	deadlineString = timestamp.Format("03:04 PM MST")
 
 	fmt.Println(internationalcolortime.TimeToICT(timestamp))
 
