@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/katamarijr/internationalcolortime"
 	"github.com/spf13/viper"
 )
 
@@ -65,9 +64,9 @@ func main() {
 
 	//todo color library is miscalculating the minutes portion on format
 	//deadlineString = internationalcolortime.TimeToICT(timestamp).Format("PNK:04, or 03:04 PM MST")
-	deadlineString = timestamp.Format("03:04 PM MST")
+	deadlineString = timestamp.Format("03:04 PM MST on Jan 02")
 
-	fmt.Println(internationalcolortime.TimeToICT(timestamp))
+	//fmt.Println(internationalcolortime.TimeToICT(timestamp))
 
 	setupViper()
 
